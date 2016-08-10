@@ -1,9 +1,0 @@
-[info] Updating {file:/Users/jian/ChineseNLP/cfnlp/cfnlp-analysis-lda/}cfnlpAnalysis...
-[debug] :: building artificial module descriptors from cfnlpanalysis#cfnlpanalysis_2.11;1.0
-[debug] ::: dd: dependency: org.scala-lang#scala-compiler;2.11.8 {scala-tool=[default, optional(default)]} (artifacts: )
-[debug] ::: dd: sbt.ivyint.MergedDescriptors@439d463 (artifacts: )
-[debug] parsing /Users/jian/.sbt/0.13/dependency/module/static/org.scala-lang/scala-compiler/2.11.8_temp-resolve-a8fe5aa83a50558fe20520ef0bc37e0a9a2d0fb9/graphs/graph.json
-[debug] parsing /Users/jian/.sbt/0.13/dependency/module/static/org.scala-lang/scala-library/2.11.8_temp-resolve-aaa597a10ae2a3f5661cea682c64a0bd2f2d8954/graphs/graph.json
-[debug] :: merging update reports
-[debug] :: merging module report for org.scala-lang:scala-library:2.11.8 - Vector((Artifact(scala-library,jar,jar,None,Vector(),None,Map()),/Users/jian/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.8.jar))
-[info] Done updating.
