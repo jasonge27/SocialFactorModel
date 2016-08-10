@@ -1,0 +1,9 @@
+[debug] :: building artificial module descriptors from cfnlpanalysis#cfnlpanalysis$sources_2.11;1.0
+[debug] ::: dd: sbt.ivyint.MergedDescriptors@3519e253 (artifacts: scala-library:src:jar:{classifier=sources})
+[debug] ::: dd: dependency: org.scala-lang#scala-compiler;2.11.8 {scala-tool=[default(compile)]} (artifacts: scala-compiler:src:jar:{classifier=sources})
+[debug] ::: dd: dependency: jline#jline;2.12.1 {scala-tool=[default(compile)]} (artifacts: jline:src:jar:{classifier=sources})
+[debug] ::: dd: dependency: org.scala-lang.modules#scala-parser-combinators_2.11;1.0.4 {scala-tool=[default(compile)]} (artifacts: scala-parser-combinators_2.11:src:jar:{classifier=sources})
+[debug] ::: dd: dependency: org.scala-lang.modules#scala-xml_2.11;1.0.4 {scala-tool=[default(compile)]} (artifacts: scala-xml_2.11:src:jar:{classifier=sources})
+[debug] ::: dd: dependency: org.scala-lang#scala-reflect;2.11.8 {scala-tool=[default(compile)]} (artifacts: scala-reflect:src:jar:{classifier=sources})
+[debug] parsing /Users/jian/.sbt/0.13/dependency/module/static/org.scala-lang.modules/scala-parser-combinators_2.11/1.0.4_temp-resolve-b8d7b05f3489463fb641efac2131820c9f14c451/graphs/graph.json
+[debug] :: merging update reports
