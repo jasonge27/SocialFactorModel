@@ -1,20 +1,11 @@
-/**
-  * Created by jian on 8/6/16.
-  */
-/**
-  * Created by jian on 8/5/16.
-  */
 package weixin.lda
 
 import com.huaban.analysis.jieba.JiebaSegmenter.SegMode
-import edu.stanford.nlp.parser.lexparser.LexicalizedParser
-import nlp.StanfordNLPChinese.ChineseStanfordNLPUtils
 import weixin.utils.formats.WeixinArticle
 import weixin.utils.{DistributedUtils, JiebaUtils, Local}
 import org.apache.spark.mllib.clustering.LDA
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
+import org.apache.spark.mllib.linalg.{SparseVector, Vector}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext
 import org.apache.spark.cfnlp.TarUtils
 
 import scala.collection.convert.decorateAll._
@@ -38,9 +29,8 @@ object PlayGround {
           segmenterPool.value.on { seg =>
             contentIter.map { case (index, raw) =>
               val document = WeixinArticle(raw).text
-              val sentences = ChineseStanfordNLPUtils.splitDocumentToSentence(document)
-              val words = sentences.flatMap(s => seg.process(s, SegMode.INDEX).asScala.map(_.word))
-              index -> words.toArray
+              val words = seg.process(document, SegMode.INDEX).asScala.view.map(_.word).toArray
+              index -> words
             }
           }
         }
