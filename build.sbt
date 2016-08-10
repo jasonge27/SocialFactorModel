@@ -33,5 +33,6 @@ val commonDependencies = Seq(
 )
 
 lazy val lda = (project in file("lda"))
+  .enablePlugins(SparkPackager)
   .settings(commonSettings)
   .settings(commonDependencies)
