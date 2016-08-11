@@ -85,19 +85,24 @@ object SparkPackager extends AutoPlugin {
 
         taros.putArchiveEntry {
           val entry = new TarArchiveEntry(s"$basedir/get-config")
-          entry.setMode(0x755)
+          entry.setMode(0755)
           entry.setSize(scriptBytes.length)
           entry
         }
         taros.write(scriptBytes)
         taros.closeArchiveEntry()
 
-        taros.putArchiveEntry(new TarArchiveEntry(s"$basedir/$jarBasedirName", TarConstants.LF_DIR))
+        taros.putArchiveEntry{
+          val entry = new TarArchiveEntry(s"$basedir/$jarBasedirName", TarConstants.LF_DIR)
+          entry.setMode(0755)
+          entry
+        }
         taros.closeArchiveEntry()
 
         jarFilesSeq.foreach { case (jar, path) =>
-          val entry = taros.createArchiveEntry(jar, s"$basedir/$path")
+          val entry = taros.createArchiveEntry(jar, s"$basedir/$path").asInstanceOf[TarArchiveEntry]
           assert(!entry.isDirectory)
+          entry.setMode(0644)
           taros.putArchiveEntry(entry)
           FileUtils.copyFile(jar, taros)
           taros.closeArchiveEntry()
