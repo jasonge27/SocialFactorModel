@@ -10,6 +10,11 @@ val commonSettings = Seq(
   updateOptions := updateOptions.value.withCachedResolution(true)
 )
 
+val sparkDependencies = Seq(
+  "org.apache.spark" %% "spark-core" % sparkVersion,
+  "org.apache.spark" %% "spark-mllib" % sparkVersion
+)
+
 val commonDependencies = Seq(
   libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.5",
 
@@ -23,10 +28,7 @@ val commonDependencies = Seq(
 
   libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.4",
 
-  libraryDependencies ++= Seq(
-    "org.apache.spark" %% "spark-core" % sparkVersion % Provided,
-    "org.apache.spark" %% "spark-mllib" % sparkVersion % Provided
-  ),
+  libraryDependencies ++= sparkDependencies map (_ % Provided),
 
   libraryDependencies += "com.huaban" % "jieba-analysis" % "1.0.2"
 
@@ -36,3 +38,10 @@ lazy val lda = (project in file("lda"))
   .enablePlugins(SparkPackager)
   .settings(commonSettings)
   .settings(commonDependencies)
+
+lazy val ldaRunner = (project in file("ldaRunner"))
+  .settings(commonSettings)
+  .dependsOn(lda)
+  .settings(
+    libraryDependencies ++= sparkDependencies map (_ % Compile)
+  )
