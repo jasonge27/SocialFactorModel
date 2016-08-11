@@ -2,7 +2,7 @@ import sbt.Keys._
 
 val scalaVersion_ = "2.11.8"
 
-val sparkVersion = "1.6.2"
+val sparkVersion = "2.0.0"
 
 val commonSettings = Seq(
   version := "1.0",
