@@ -25,8 +25,9 @@ object SparkPackager extends AutoPlugin {
     packageSpark in Compile <<= (
       crossTarget in Compile,
       packageBin in Compile,
-      externalDependencyClasspath in Runtime
-      ) map { case (targetValue, packageBinValue, cpValue) =>
+      externalDependencyClasspath in Runtime,
+      streams in Compile
+      ) map { case (targetValue, packageBinValue, cpValue, streamsValue) =>
 
       val outputFile = new File(targetValue, "package-spark.tar.gz")
       val taros = new TarArchiveOutputStream(
@@ -109,6 +110,7 @@ object SparkPackager extends AutoPlugin {
           taros.closeArchiveEntry()
         }
 
+        streamsValue.log.info(s"${packageSpark.key.label}: generated file ${outputFile.getAbsolutePath}")
         outputFile
       }
       catch {
