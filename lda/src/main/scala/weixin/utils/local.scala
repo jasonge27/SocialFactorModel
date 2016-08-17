@@ -19,15 +19,15 @@ object Local {
     "C:\\Users\\guo\\x\\cfnlp\\storage\\weixin-data\\"
   } else if (System.getProperty("os.name").startsWith("Mac")) {
     "/User/jian/ChineseNLP/storage/tars/"
-  } else{
-      "/home/cfnlpdata/cfnlp/storage/weixin/persistent/"
+  } else {
+      "/tigress/jiange/projs/lda/tars/"
   }
 
-  val weixinArticleArchiveFile = new File(weixinArticleArchiveDir, "141.f.tar.xz").getPath
+  val weixinArticleArchiveFile = new File(weixinArticleArchiveDir, "200.f.tar.xz").getPath
 
-  val weixinArticleArchiveContents = TarContents(weixinArticleArchiveFile)
+  //val weixinArticleArchiveContents = TarContents(weixinArticleArchiveFile)
 
-  private val resourcePath = this.getClass.getPackage.getName.replace(".", "/")
+  private val resourcePath = "/tigress/jiange/projs/lda/resources"
 
   lazy val stockBasics = StockBasics.loadFromResource(resourcePath + "/stock_basics.csv")
   lazy val stockMatcher = StockMatcher(stockBasics)
@@ -46,10 +46,10 @@ object Local {
     finally resource.close()
   }
 
-  lazy val sparkConf = new SparkConf(false)
-    .setMaster("local[32]")
+  lazy val sparkConf = new SparkConf()
     .setAppName("cfnlp")
-    .set("spark.streaming.backpressure.enabled", "true")
+   // .setMaster("local[32]")
+    //.set("spark.streaming.backpressure.enabled", "true")
 
   def sparkContext = SparkContext.getOrCreate(sparkConf)
 

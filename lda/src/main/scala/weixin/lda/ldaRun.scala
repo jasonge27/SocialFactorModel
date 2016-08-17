@@ -17,6 +17,7 @@ object PlayGround {
   private def createSegmenterFunction = () => JiebaUtils.createJiebaSegmenter
 
   def ldaDemo(paths: Seq[String]) {
+    println(paths)
     val sc = Local.sparkContext
 
     val articleRDD: RDD[(Long, Array[String])] = {
