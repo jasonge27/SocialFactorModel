@@ -92,23 +92,21 @@ object PlayGround {
       }
     }
 
-    val stockTopicPairs = stockBasics.entries.zip(topicBasics.entries)
-    val stockTopicPairsBroadcasted = sc.broadcast(stockTopicPairs)
-
     case class StockTopicLink(stockName: String, topicName: String, date: Date)
 
-    val stockTopicLinkFlatRDD: RDD[(StockTopicLink, Double)] = articleRDDNonDup
-      .flatMap { article =>
-        stockTopicPairsBroadcasted.value.map {
-          case (stockName: StockBasics.Entry, topicEntry: TopicBasics.Entry) =>
-            val articleMatch = processArticle(stockName.name, topicEntry.keywords)(article)
-            (StockTopicLink(stockName.name, topicEntry.topicName, articleMatch._1), articleMatch._2)
+    val stockBasicsRDD = sc.parallelize(stockBasics.entries)
+    val topicBasicsRDD = sc.parallelize(topicBasics.entries)
+
+    val stockTopicLink =
+      articleRDDNonDup.cartesian(stockBasicsRDD.cartesian(topicBasicsRDD))
+        .map { case (article, (stock, topic)) =>
+          val (date, score) = processArticle(stock.name, topic.keywords)(article)
+          (StockTopicLink(stock.name, topic.topicName, date), score)
         }
-      }
+      .reduceByKeyLocally(_ + _)
+      .toMap
 
-    val stockTopicLink = stockTopicLinkFlatRDD.reduceByKey((x, y) => x + y)
-
-    stockTopicLink.collect().foreach(println)
+    stockTopicLink.foreach(println)
 
     //val wordsCount: Seq[(String, Long)] = articleRDD.flatMap(_._2).countByValue().toSeq.sortBy(-_._2)
 
