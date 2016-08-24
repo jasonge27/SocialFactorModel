@@ -6,7 +6,7 @@ package weixin.utils
 
 import java.io.File
 
-import weixin.utils.formats.{AShareHistory, StockBasics}
+import weixin.utils.formats.{AShareHistory, StockBasics, TopicBasics}
 import weixin.utils.io.TarContents
 import weixin.utils.stocks.StockMatcher
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
@@ -23,14 +23,17 @@ object Local {
       "/tigress/jiange/projs/lda/tars/"
   }
 
-  val weixinArticleArchiveFile = new File(weixinArticleArchiveDir, "200.f.tar.xz").getPath
+  lazy val weixinArticleArchiveFile = new File(weixinArticleArchiveDir, "200.f.tar.xz").getPath
+  //val weixinArticleArchiveFile =
 
   //val weixinArticleArchiveContents = TarContents(weixinArticleArchiveFile)
 
-  private val resourcePath = "/tigress/jiange/projs/lda/resources"
+  private val  resourcePath = this.getClass.getPackage.getName.replace(".", "/")
+  println(resourcePath)
 
-  lazy val stockBasics = StockBasics.loadFromResource(resourcePath + "/stock_basics.csv")
-  lazy val stockMatcher = StockMatcher(stockBasics)
+  val stockBasics = StockBasics.loadFromResource(resourcePath + "/stock_basics.csv")
+  //lazy val stockMatcher = StockMatcher(stockBasics)
+  val topicBasics = TopicBasics.loadFromResource(resourcePath + "/topic_basics.txt")
 
   lazy val aShareHistory: AShareHistory = {
     val path = resourcePath + "/Ashare_hist.json.gz"
