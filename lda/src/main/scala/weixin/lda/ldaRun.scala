@@ -114,7 +114,7 @@ object PlayGround {
 
     val stockTopicLink = stockTopicLinkFlatRDD.reduceByKey((x,y) => x+y)
 
-    stockTopicLink.take(100).foreach(println)
+    stockTopicLink.collect().foreach(println)
 
     //val wordsCount: Seq[(String, Long)] = articleRDD.flatMap(_._2).countByValue().toSeq.sortBy(-_._2)
 
