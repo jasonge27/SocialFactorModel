@@ -27,8 +27,8 @@ object PlayGround {
     val stockBasics = Local.stockBasics
     val topicBasics = Local.topicBasics
 
-    val stockBasicsBroadcasted = sc.broadcast(Local.stockBasics)
-    val topicBasicsBroadcasted = sc.broadcast(Local.topicBasics)
+    // val stockBasicsBroadcasted = sc.broadcast(Local.stockBasics)
+    // val topicBasicsBroadcasted = sc.broadcast(Local.topicBasics)
 
 
     val articleRDD: RDD[WeixinArticle] = {
@@ -36,18 +36,16 @@ object PlayGround {
         .map(_.content)
         //.zipWithUniqueId().map(_.swap)
         //.repartition(100)
-        .mapPartitions(contentIter => {contentIter.map {raw => WeixinArticle(raw)}})
+        .map(raw => WeixinArticle(raw))
     }
 
     //val articleCount: Long = articleRDD.count()
 
 
-    lazy val articleRDDNonDup: RDD[WeixinArticle] = articleRDD.mapPartitions { contentIter => {
-      val articles_nondup: Iterator[WeixinArticle] = contentIter.toList.groupBy(_.key).mapValues(_.head).values.toIterator
-      articles_nondup
-      //articles
-      }
-    }
+    val articleRDDNonDup: RDD[WeixinArticle] = articleRDD
+      .map(article => (article.key, article))
+      .reduceByKey((a, b) => a)
+      .values
     articleRDDNonDup.persist()
 
     //val articleRDDNonDup = articleRDD
@@ -55,23 +53,23 @@ object PlayGround {
 
     val articleCountNonDup = articleRDDNonDup.count()
 
-    articleRDDNonDup.map(item => {(item.date, item.title)}).take(30).foreach(println)
+    articleRDDNonDup.map(item => (item.date, item.title)).take(30).foreach(println)
 
     //println(s"Total number of articles: ${articleCount}")
-    println(s"Num of articles after pruning: ${articleCountNonDup}")
+    println(s"Num of articles after pruning: $articleCountNonDup")
 
 
 
     def processArticle(stockName: String, keywords: Seq[String])(article:WeixinArticle) : (Date, Double) = {
       val dateParser = new java.text.SimpleDateFormat("yyyy-MM-dd")
-      val articleSentences = article.maintext.split("。|！|，|,|\\.|!|\n").map(_.trim).filter(_.length>0)
+      val articleSentences = article.maintext.split("。|！|，|,|\\.|!|\n").map(_.trim).filter(_.length > 0)
 
       val buf = scala.collection.mutable.ListBuffer.empty[Seq[String]]
 
       var i = 0
       if (articleSentences.length >= 3){
-        for ( i <- 0 to (articleSentences.length-1)){
-          if (i+2 < articleSentences.length){
+        for (i <- articleSentences.indices) {
+          if (i + 2 < articleSentences.length) {
             buf += Seq(articleSentences(i), articleSentences(i+1), articleSentences(i+2))
           }
         }
@@ -79,15 +77,15 @@ object PlayGround {
         buf += articleSentences
       }
 
-
       val sentenceList = buf.toList
 
-      val occurrence = sentenceList.filter({ localList =>
-        localList.filter(_.contains(stockName)).filter(
-          { item => keywords.map(item.contains(_)).foldLeft(true)(_ | _) }).length > 0
-      })
+      val occurrence = sentenceList.filter { localList =>
+        localList
+          .filter(_.contains(stockName))
+          .exists { item => keywords.forall(item.contains) }
+      }
 
-      if (occurrence.length > 0){
+      if (occurrence.nonEmpty){
         (article.date, 1.0)
       } else {
         (article.date, 0.0)
@@ -97,22 +95,18 @@ object PlayGround {
     val stockTopicPairs = stockBasics.entries.zip(topicBasics.entries)
     val stockTopicPairsBroadcasted = sc.broadcast(stockTopicPairs)
 
-    case class StockTopicLink(stockName:String, topicName:String, date:Date)
+    case class StockTopicLink(stockName: String, topicName: String, date: Date)
 
-    val stockTopicLinkFlatRDD: RDD[(StockTopicLink, Double)]   = articleRDDNonDup.mapPartitions {
-      contentIter => {
-        contentIter.flatMap { article =>
-          stockTopicPairsBroadcasted.value.map {
-            case (stockName: StockBasics.Entry, topicEntry: TopicBasics.Entry) => {
-              val articleMatch = processArticle(stockName.name, topicEntry.keywords)(article)
-              (StockTopicLink(stockName.name, topicEntry.topicName, articleMatch._1), articleMatch._2)
-            }
-          }
+    val stockTopicLinkFlatRDD: RDD[(StockTopicLink, Double)] = articleRDDNonDup
+      .flatMap { article =>
+        stockTopicPairsBroadcasted.value.map {
+          case (stockName: StockBasics.Entry, topicEntry: TopicBasics.Entry) =>
+            val articleMatch = processArticle(stockName.name, topicEntry.keywords)(article)
+            (StockTopicLink(stockName.name, topicEntry.topicName, articleMatch._1), articleMatch._2)
         }
       }
-    }
 
-    val stockTopicLink = stockTopicLinkFlatRDD.reduceByKey((x,y) => x+y)
+    val stockTopicLink = stockTopicLinkFlatRDD.reduceByKey((x, y) => x + y)
 
     stockTopicLink.take(100).foreach(println)
 

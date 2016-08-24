@@ -29,7 +29,7 @@ object Local {
   //val weixinArticleArchiveContents = TarContents(weixinArticleArchiveFile)
 
   private val  resourcePath = this.getClass.getPackage.getName.replace(".", "/")
-  println(resourcePath)
+  // println(resourcePath)
 
   val stockBasics = StockBasics.loadFromResource(resourcePath + "/stock_basics.csv")
   //lazy val stockMatcher = StockMatcher(stockBasics)
