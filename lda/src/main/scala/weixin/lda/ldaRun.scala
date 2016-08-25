@@ -1,19 +1,10 @@
 package weixin.lda
 
-import com.huaban.analysis.jieba.JiebaSegmenter.SegMode
 import weixin.utils.formats.WeixinArticle
-import weixin.utils.{DistributedUtils, JiebaUtils, Local}
-import org.apache.spark.mllib.clustering.LDA
-import org.apache.spark.mllib.linalg.{SparseVector, Vector}
+import weixin.utils.{JiebaUtils, Local}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.cfnlp.TarUtils
 
-import java.util.Date
-
-import weixin.utils.formats.{StockBasics, TopicBasics}
-
-import scala.collection.convert.decorateAll._
-import scala.collection.mutable
 import scalaz.syntax.id._
 
 object PlayGround {
@@ -53,46 +44,49 @@ object PlayGround {
 
     val articleCountNonDup = articleRDDNonDup.count()
 
-    articleRDDNonDup.map(item => (item.date, item.title)).take(30).foreach(println)
+    articleRDDNonDup.take(30).foreach(item => println(item.dateText, item.title))
 
     //println(s"Total number of articles: ${articleCount}")
     println(s"Num of articles after pruning: $articleCountNonDup")
 
 
 
-    def processArticle(stockName: String, keywords: Seq[String])(article:WeixinArticle) : (Date, Double) = {
-      val dateParser = new java.text.SimpleDateFormat("yyyy-MM-dd")
-      val articleSentences = article.maintext.split("。|！|，|,|\\.|!|\n").map(_.trim).filter(_.length > 0)
+    def calculateArticleScore(stockName: String, keywords: Seq[String], article: WeixinArticle): Double = {
+      val articleSentences = article.mainText.split("。|！|，|,|\\.|!|\n").map(_.trim).filter(_.length > 0)
 
-      val buf = scala.collection.mutable.ListBuffer.empty[Seq[String]]
+      case class SentenceState(containsStockName: Boolean, containsAnyKeyword: Boolean) {
+        def +(other: SentenceState) = SentenceState(
+          containsStockName = containsStockName || other.containsStockName,
+          containsAnyKeyword = containsAnyKeyword || other.containsAnyKeyword
+        )
+        def matched = containsStockName && containsAnyKeyword
+      }
+      def getState(sentence: String) = SentenceState(
+        containsStockName = sentence contains stockName,
+        containsAnyKeyword = keywords exists sentence.contains
+      )
 
-      var i = 0
-      if (articleSentences.length >= 3){
-        for (i <- articleSentences.indices) {
-          if (i + 2 < articleSentences.length) {
-            buf += Seq(articleSentences(i), articleSentences(i+1), articleSentences(i+2))
+      val matched = if (articleSentences.length < 3) {
+        articleSentences.map(getState).reduce(_ + _).matched
+      } else {
+        val Array(is0, is1, is2) = articleSentences.slice(0, 2).map(getState)
+        articleSentences
+          .iterator
+          .drop(3)
+          .map(getState)
+          .scanLeft((is0, is1, is2)) { case ((s0, s1, s2), s3) =>
+            (s1, s2, s3)
           }
-        }
-      } else {
-        buf += articleSentences
+          .exists { case (s0, s1, s2) =>
+            (s0 + s1 + s2).matched
+          }
       }
 
-      val sentenceList = buf.toList
-
-      val occurrence = sentenceList.filter { localList =>
-        localList
-          .filter(_.contains(stockName))
-          .exists { item => keywords.forall(item.contains) }
-      }
-
-      if (occurrence.nonEmpty){
-        (article.date, 1.0)
-      } else {
-        (article.date, 0.0)
-      }
+      val score = if (matched) 1.0 else 0.0
+      score
     }
 
-    case class StockTopicLink(stockName: String, topicName: String, date: Date)
+    case class StockTopicLink(stockName: String, topicName: String, dateText: String)
 
     val stockBasicsRDD = sc.parallelize(stockBasics.entries)
     val topicBasicsRDD = sc.parallelize(topicBasics.entries)
@@ -100,8 +94,8 @@ object PlayGround {
     val stockTopicLink =
       articleRDDNonDup.cartesian(stockBasicsRDD.cartesian(topicBasicsRDD))
         .map { case (article, (stock, topic)) =>
-          val (date, score) = processArticle(stock.name, topic.keywords)(article)
-          (StockTopicLink(stock.name, topic.topicName, date), score)
+          val score = calculateArticleScore(stock.name, topic.keywords, article)
+          (StockTopicLink(stock.name, topic.topicName, article.dateText), score)
         }
       .reduceByKeyLocally(_ + _)
       .toMap

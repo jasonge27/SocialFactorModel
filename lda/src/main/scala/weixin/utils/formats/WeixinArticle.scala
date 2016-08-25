@@ -1,13 +1,12 @@
 package weixin.utils.formats
 
-import java.util.Date
 
-class WeixinArticle (
-  val date: Date,
-  val maintext: String,
-  val title: String
+case class WeixinArticle(
+  dateText: String,
+  mainText: String,
+  title: String
 ) {
-  val key = (date, title)
+  def key = (dateText, title)
 }
 
 object WeixinArticle {
@@ -19,14 +18,9 @@ object WeixinArticle {
       .document()
     require(document ne null)
     val dateText = (document \ "jsArticle" \ "metaList" \ "postDate").text
-    val dateParser = new java.text.SimpleDateFormat("yyyy-MM-dd")
     new WeixinArticle(
-      date = try {
-        dateParser.parse(dateText)
-      } catch {
-        case e:Exception => dateParser.parse("2048-00-00")
-      },
-      maintext = (document \ "jsArticle" \ "jsContent" \ "text").text,
+      dateText = dateText,
+      mainText = (document \ "jsArticle" \ "jsContent" \ "text").text,
       title = (document \ "jsArticle" \ "title").text
     )
   }
