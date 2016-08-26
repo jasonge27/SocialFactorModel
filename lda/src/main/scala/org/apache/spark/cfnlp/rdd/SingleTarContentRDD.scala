@@ -46,7 +46,11 @@ class SingleTarContentRDD(sc: SparkContext, path: String) extends RDD[TarContent
     val fs = FileSystem.get(getConf)
     val fsPath = new Path(path)
 
-    val rawStream = fs.open(fsPath)
+    val defaultBufferSize = getConf.getInt("io.file.buffer.size", 4096)
+    val minimalBufferSize = 1048576
+    val bufferSize = minimalBufferSize max defaultBufferSize
+
+    val rawStream = fs.open(fsPath, bufferSize)
     val stream = decompress(fsPath, rawStream)
 
     val iter = new TarIterator(stream)
