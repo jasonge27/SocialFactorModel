@@ -197,7 +197,7 @@ object PlayGround {
   def main(args: Array[String]) {
     val start = System.nanoTime()
     "Hello world!" |> println
-    stockTopicLinksCalculation(Seq(Local.weixinArticleArchiveFile))
+    stockTopicLinksCalculation(Local.weixinArticleArchiveFileNames)
     val end = System.nanoTime()
     println(s"time spent: ${(end - start) / 1e9}")
   }

@@ -23,8 +23,11 @@ object Local {
       "/tigress/jiange/projs/lda/test_tars/"
   }
 
-  lazy val weixinArticleArchiveFile = new File(weixinArticleArchiveDir, "200.f.tar.xz").getPath
-  //val weixinArticleArchiveFile =
+
+  val weixinArticleArchiveFolder = new File(weixinArticleArchiveDir)
+
+  val weixinArticleArchiveFileNames:Seq[String]
+  = weixinArticleArchiveFolder.listFiles().filter(_.isFile).map(_.getPath).filter(_.endsWith(".tar.xz")).toList
 
   //val weixinArticleArchiveContents = TarContents(weixinArticleArchiveFile)
 
