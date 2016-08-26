@@ -20,7 +20,7 @@ object Local {
   } else if (System.getProperty("os.name").startsWith("Mac")) {
     "/User/jian/ChineseNLP/storage/tars/"
   } else {
-      "/tigress/jiange/projs/lda/test_tars/"
+      "/tigress/jiange/projs/lda/tars/"
   }
 
 
